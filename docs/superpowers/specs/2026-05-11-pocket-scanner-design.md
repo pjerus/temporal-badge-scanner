@@ -14,12 +14,15 @@ This spec covers Phase 1 only. Phase 2 and Phase 3 are sketched at the end so th
 
 - ESP32-S3-WROOM-1, 16 MB flash, 8 MB octal PSRAM, 240 MHz dual-core
 - WiFi 2.4 GHz, Bluetooth 5 LE, native USB Serial/JTAG
-- 1.3" SSD1309 128×64 monochrome OLED over I²C (SDA=GPIO5, SCL=GPIO6 per upstream README)
-- 7×7 NeoPixel matrix (49 RGB LEDs)
-- 2-axis analog joystick (GPIO0/1), 4 buttons (GPIO7–10), tilt switch (GPIO6)
+- 1.3" SSD1309 128×64 monochrome OLED over I²C (SDA=GPIO5, SCL=GPIO6)
+- **8×8 IS31FL3731 monochrome LED matrix** (64 LEDs, brightness only — not RGB)
+- 2-axis analog joystick (GPIO1/2), 4 directional buttons (UP=44, DOWN=7, LEFT=8, RIGHT=9)
+- **LIS2DH12 3-axis IMU** (tilt/face detection — not a simple switch)
 - IR TX/RX (GPIO3/4, NEC protocol)
 - 1000 mAh LiPo, USB-C charging
-- Upstream firmware pin: `v0.2.4` (https://github.com/Architeuthis-Flux/Temporal-Replay-26-Badge)
+- Upstream firmware pin: `0.2.4` (https://github.com/Architeuthis-Flux/Temporal-Replay-26-Badge)
+
+> **Spec correction (logged during implementation):** Earlier drafts described a "7×7 NeoPixel matrix" and "tilt switch" based on the upstream README. The canonical `API_REFERENCE.md` (and the actual hardware) reveal an 8×8 IS31FL3731 monochrome matrix and a LIS2DH12 accelerometer. Phase 2 scanner UI ideas that assumed RGB output (e.g., red-flash stalker alert) will need rethinking — brightness/blink patterns instead of color.
 
 ## Non-goals (Phase 1)
 
@@ -165,13 +168,15 @@ When the scanner screens land, on-device data lives in FatFS:
 
 No remote sync, no backend. Off-device backups happen by reading FatFS over USB if the user wants.
 
-## NeoPixel matrix usage (forward-looking, Phase 2)
+## LED matrix usage (forward-looking, Phase 2)
+
+The matrix is monochrome — brightness only — so signals encode via intensity, position, and blink rather than color.
 
 - Idle: dim breathing pattern
-- BLE/WiFi scan: 7×7 RSSI heatmap (top devices/APs by signal)
-- Stalker alert: matrix flashes red
-- IR replay: brief green pulse
-- Phase 1 demo: cursor follows joystick; whatever LED the cursor sits on lights up
+- BLE/WiFi scan: 8×8 RSSI heatmap (top 64 devices/APs by signal, brightness ∝ RSSI)
+- Stalker alert: fast all-on blink
+- IR replay: brief all-on pulse
+- Phase 1 demo: cursor follows joystick; whatever LED the cursor sits on lights up (verified working)
 
 ## Open questions / risks
 
